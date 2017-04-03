@@ -446,16 +446,25 @@ n.a.summary <- function(df) {
   df
 }
 
+plot_model_perf <- function(mdl,ref,clr,ad) {
+  pred_prob <- predict(mdl, type = "response")
+  mdl_score <- prediction(pred_prob, ref)
+  perf      <- performance(mdl_score, "tpr", "fpr")
+  plot(perf,col=clr,add=ad)
+}
 
 
 
 # ***** LOAD LIBRARY ***** ----
 library(MASS)
-library(car)
-library(caret)
 library(h2o)        # Neural Netwroks
 library(cowplot)    # Plot Grid
-
+library(ggplot2)
+library(car)    # VIF
+library(Hmisc)
+library(ROCR)
+library(caret)
+library(caTools) # sample.split
 
 
 # ***** LOAD DATA ***** ----
@@ -480,14 +489,24 @@ train[is.na(train)] <- 0
 test[is.na(test)] <- 0
 
 # make response as Character factor
-train$Outcome <- as.character(train$Outcome)
-train$Outcome[train$Outcome == 1] <- "YES"
-train$Outcome[train$Outcome == 0] <- "NO"
+#train$Outcome <- as.character(train$Outcome)
+#train$Outcome[train$Outcome == 1] <- "YES"
+#train$Outcome[train$Outcome == 0] <- "NO"
 
 
 # save train and test
 write.csv(train, "../intrim/train.csv", row.names = FALSE)
 write.csv(test, "../intrim/test.csv", row.names = FALSE)
+
+
+# ***** Logistic Regression ***** ----
+train_lm <- train[,-c(1,2,3)]
+mdl1 <- glm(Outcome~., train_lm, family = "binomial")
+
+str(mdl1)
+
+summary(mdl1)
+
 
 
 # ***** H2O ***** ----
